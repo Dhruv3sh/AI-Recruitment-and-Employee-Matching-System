@@ -35,6 +35,11 @@ export default function JobsPage() {
         </span>
       </div>
       <div className="mt-4 grid gap-3">
+        {!workspace.readiness.ready ? (
+          <p className="rounded-[9px] border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+            {workspace.readiness.message}
+          </p>
+        ) : null}
         {workspace.jobs.length ? (
           workspace.jobs.map((job) => (
             <JobCard
@@ -43,6 +48,7 @@ export default function JobsPage() {
               applied={workspace.appliedJobIds.includes(String(job._id))}
               busy={workspace.busyJobId === String(job._id)}
               onApply={workspace.applyForJob}
+              readiness={workspace.readiness}
             />
           ))
         ) : (

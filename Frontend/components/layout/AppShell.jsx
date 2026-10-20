@@ -8,6 +8,8 @@ import {
   BriefcaseBusiness,
   ChevronDown,
   CircleDotDashed,
+  Inbox,
+  ListChecks,
   LogOut,
   Map,
   Menu,
@@ -26,6 +28,8 @@ const navigation = {
   ],
   recruiter: [
     { href: "/recruiter", Icon: BriefcaseBusiness, label: "Recruiter desk" },
+    { href: "/roles", Icon: ListChecks, label: "Published roles" },
+    { href: "/applications", Icon: Inbox, label: "Candidates Applications " },
     { href: "/system", Icon: Map, label: "System map" },
   ],
 };

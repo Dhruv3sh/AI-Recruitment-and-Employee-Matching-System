@@ -16,6 +16,8 @@ const profileSnapshotSchema = new mongoose.Schema(
 const resumeSnapshotSchema = new mongoose.Schema(
   {
     fileName: { type: String, required: true },
+    mimeType: { type: String, default: "application/octet-stream" },
+    storedFileName: { type: String, default: "", select: false },
     parsingStatus: { type: String, default: "pending" },
     parsed: {
       skills: { type: [String], default: [] },
@@ -55,7 +57,7 @@ const applicationSchema = new mongoose.Schema(
     profileSnapshot: { type: profileSnapshotSchema, required: true },
     status: {
       type: String,
-      enum: ["submitted"],
+      enum: ["submitted", "accepted", "rejected"],
       default: "submitted",
     },
   },

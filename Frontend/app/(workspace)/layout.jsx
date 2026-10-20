@@ -20,6 +20,14 @@ const workspaceCopy = {
     eyebrow: "Candidate workspace",
     title: "Explore open roles",
   },
+  "/applications": {
+    eyebrow: "Recruiter workspace",
+    title: "Applications received",
+  },
+  "/roles": {
+    eyebrow: "Recruiter workspace",
+    title: "Manage published roles",
+  },
   "/recommendations": {
     eyebrow: "System map",
     title: "Understand every signal",
@@ -53,12 +61,22 @@ export default function WorkspaceLayout({ children }) {
     if (pathname.startsWith("/jobs") && session.user.role !== "candidate") {
       router.replace("/recruiter");
     }
+
+    if (pathname === "/applications" && session.user.role !== "recruiter") {
+      router.replace("/candidate");
+    }
+
+    if (pathname === "/roles" && session.user.role !== "recruiter") {
+      router.replace("/candidate");
+    }
   }, [pathname, ready, router, session]);
 
   const hasWrongRole =
     (pathname === "/candidate" && session?.user.role === "recruiter") ||
     (pathname === "/recruiter" && session?.user.role !== "recruiter") ||
-    (pathname.startsWith("/jobs") && session?.user.role !== "candidate");
+    (pathname.startsWith("/jobs") && session?.user.role !== "candidate") ||
+    (pathname === "/applications" && session?.user.role !== "recruiter") ||
+    (pathname === "/roles" && session?.user.role !== "recruiter");
 
   const handleSignOut = useCallback(() => {
     signOut();

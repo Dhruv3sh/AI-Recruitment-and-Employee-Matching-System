@@ -182,7 +182,13 @@ export async function demoLogin(req, res, next) {
     for (const job of demoJobs) {
       const savedJob = await Job.findOneAndUpdate(
         { recruiter: recruiter._id, title: job.title, company: job.company },
-        { ...job, recruiter: recruiter._id, status: "open" },
+        {
+          $setOnInsert: {
+            ...job,
+            recruiter: recruiter._id,
+            status: "open",
+          },
+        },
         { upsert: true, new: true, setDefaultsOnInsert: true },
       );
       savedJobs.push(savedJob);

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { apiRequest, isUnauthorizedError, openResumeFile } from "../lib/api";
+import { apiRequest, isUnauthorizedError } from "../lib/api";
 import { useWorkspaceSession } from "../components/layout/WorkspaceContext";
 import { emptyJob } from "../utils/format";
 
@@ -11,10 +11,10 @@ export function useRecruiterWorkspace() {
   const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState("");
   const [matches, setMatches] = useState([]);
-  const [applications, setApplications] = useState([]);
   const [jobForm, setJobForm] = useState(emptyJob);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
 
   const handleRequestError = useCallback((error) => {
     if (isUnauthorizedError(error)) {
@@ -27,17 +27,13 @@ export function useRecruiterWorkspace() {
 
   const loadMatches = useCallback(async (jobId) => {
     if (!jobId || !session?.token) return;
-    const [matchResult, applicationResult] = await Promise.all([
-      apiRequest(`/matches/jobs/${jobId}`, { token: session.token }),
-      apiRequest(`/applications/jobs/${jobId}`, { token: session.token }),
-    ]);
+    const matchResult = await apiRequest(`/matches/jobs/${jobId}`, { token: session.token });
     setMatches(matchResult.matches || []);
-    setApplications(applicationResult.applications || []);
   }, [session]);
 
   const loadJobs = useCallback(async () => {
     const result = await apiRequest("/jobs", { token: session.token });
-    const openJobs = result.jobs || [];
+    const openJobs = (result.jobs || []).filter((job) => job.status === "open");
     setJobs(openJobs);
     setSelectedJob((current) => current && openJobs.some((job) => job._id === current) ? current : openJobs[0]?._id || "");
   }, [session]);
@@ -63,11 +59,24 @@ export function useRecruiterWorkspace() {
     finally { setBusy(false); }
   }
 
-  async function viewCandidateResume(resumeId) {
+  async function generateDescription() {
+    if (!jobForm.title.trim()) {
+      toast.error("Enter a job title before generating a description.");
+      return;
+    }
+    setGeneratingDescription(true);
     try {
-      await openResumeFile(resumeId, session.token);
+      const result = await apiRequest("/jobs/generate-description", {
+        token: session.token,
+        method: "POST",
+        body: jobForm,
+      });
+      setJobForm((current) => ({ ...current, description: result.description }));
+      toast.success(result.message);
     } catch (error) {
       handleRequestError(error);
+    } finally {
+      setGeneratingDescription(false);
     }
   }
 
@@ -77,12 +86,12 @@ export function useRecruiterWorkspace() {
     selectedJob,
     setSelectedJob,
     matches,
-    applications,
     jobForm,
     setJobForm,
     loading,
     busy,
+    generatingDescription,
     createJob,
-    viewCandidateResume,
+    generateDescription,
   };
 }

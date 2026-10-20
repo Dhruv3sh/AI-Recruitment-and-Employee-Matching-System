@@ -21,6 +21,7 @@ import { EmptyState } from "../../../../components/ui/EmptyState";
 import { RouteLoading } from "../../../../components/ui/RouteLoading";
 import { ConfirmDialog } from "../../../../components/ui/ConfirmDialog";
 import { labelSkill } from "../../../../utils/format";
+import { getApplicationReadiness } from "../../../../utils/applicationReadiness";
 
 export default function JobDetailsPage() {
   const { jobId } = useParams();
@@ -33,6 +34,7 @@ export default function JobDetailsPage() {
   const [coach, setCoach] = useState(null);
   const [coachLoading, setCoachLoading] = useState(true);
   const [withdrawPending, setWithdrawPending] = useState(false);
+  const [readiness, setReadiness] = useState({ ready: false, message: "Checking application requirements..." });
 
   const handleError = useCallback(
     (requestError) => {
@@ -51,14 +53,17 @@ export default function JobDetailsPage() {
     Promise.all([
       apiRequest(`/jobs/${jobId}`, { token: session.token }),
       apiRequest("/applications", { token: session.token }),
+      apiRequest("/profile/me", { token: session.token }),
+      apiRequest("/resumes", { token: session.token }),
     ])
-      .then(([jobResult, applications]) => {
+      .then(([jobResult, applications, profileResult, resumeResult]) => {
         setJob(jobResult.job);
         setApplied(
           (applications.applications || []).some(
             (item) => String(item.job) === String(jobId),
           ),
         );
+        setReadiness(getApplicationReadiness(profileResult.user.profile, resumeResult.resumes || []));
         apiRequest(`/matches/jobs/${jobId}/coach`, { token: session.token })
           .then((result) => setCoach(result))
           .catch(() => setCoach(null))
@@ -69,6 +74,10 @@ export default function JobDetailsPage() {
   }, [handleError, jobId, session.token]);
 
   async function apply() {
+    if (!readiness.ready) {
+      toast.error(readiness.message);
+      return;
+    }
     setBusy(true);
     try {
       const result = await apiRequest("/applications", {
@@ -136,14 +145,15 @@ export default function JobDetailsPage() {
               <button
                 type="button"
                 className="primary-button"
-                disabled={busy || applied}
+                title={!readiness.ready ? readiness.message : undefined}
+                disabled={busy || applied || !readiness.ready}
                 onClick={apply}
               >
                 {applied
                   ? "Applied"
                   : busy
                     ? "Applying..."
-                    : "Apply for this role"}
+                    : readiness.ready ? "Apply for this role" : "Profile & resume required"}
               </button>
               {applied ? (
                 <button
@@ -157,6 +167,7 @@ export default function JobDetailsPage() {
               ) : null}
             </div>
           </div>
+          {!applied && !readiness.ready ? <p className="mt-4 text-xs text-amber-700">{readiness.message}</p> : null}
           <div className="mt-6 flex flex-wrap gap-3 text-xs text-[#58779e]">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-2">
               <MapPin size={15} /> {job.location || "Location flexible"}

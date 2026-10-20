@@ -5,6 +5,8 @@ export const EMBED_MODEL =
   process.env.EMBED_MODEL || "Xenova/all-MiniLM-L6-v2";
 
 let extractorPromise;
+const embeddingRequests = new Map();
+const embeddingQueues = new Map();
 
 function getExtractor() {
   extractorPromise ??= import("@huggingface/transformers")
@@ -111,15 +113,51 @@ export async function ensureEmbedding(doc, text) {
     return doc.embedding.vector;
   }
 
-  const vector = await embed(text);
+  const documentKey = `${doc.constructor.modelName}:${doc._id}`;
+  const requestKey = `${documentKey}:${hash}`;
+  const existingRequest = embeddingRequests.get(requestKey);
+  if (existingRequest) return existingRequest;
 
-  doc.embedding = {
-    vector,
-    hash,
-    model: EMBED_MODEL
-  };
+  const previousRequest = embeddingQueues.get(documentKey) || Promise.resolve();
+  const request = previousRequest
+    .catch(() => {})
+    .then(async () => {
+      const vector = await embed(text);
+      const embedding = {
+        vector,
+        hash,
+        model: EMBED_MODEL,
+      };
 
-  await doc.save();
+      // Match refreshes evaluate one shared Mongoose document in parallel. Persist
+      // the embedding atomically instead of calling doc.save() on that instance.
+      await doc.constructor.updateOne(
+        { _id: doc._id },
+        { $set: { embedding } },
+      );
 
-  return vector;
+      doc.embedding = embedding;
+      doc.unmarkModified?.("embedding");
+      return vector;
+    });
+
+  embeddingRequests.set(requestKey, request);
+  embeddingQueues.set(documentKey, request);
+  void request.then(() => {
+    if (embeddingRequests.get(requestKey) === request) {
+      embeddingRequests.delete(requestKey);
+    }
+    if (embeddingQueues.get(documentKey) === request) {
+      embeddingQueues.delete(documentKey);
+    }
+  }, () => {
+    if (embeddingRequests.get(requestKey) === request) {
+      embeddingRequests.delete(requestKey);
+    }
+    if (embeddingQueues.get(documentKey) === request) {
+      embeddingQueues.delete(documentKey);
+    }
+  });
+
+  return request;
 }

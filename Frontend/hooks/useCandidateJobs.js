@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { apiRequest, isUnauthorizedError } from "../lib/api";
 import { useWorkspaceSession } from "../components/layout/WorkspaceContext";
+import { getApplicationReadiness } from "../utils/applicationReadiness";
 
 export function useCandidateJobs() {
   const { session, endSession } = useWorkspaceSession();
@@ -12,6 +13,7 @@ export function useCandidateJobs() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [busyJobId, setBusyJobId] = useState("");
+  const [readiness, setReadiness] = useState({ ready: false, message: "Checking application requirements..." });
 
   const handleError = useCallback((error) => {
     if (isUnauthorizedError(error)) {
@@ -23,12 +25,15 @@ export function useCandidateJobs() {
   }, [endSession]);
 
   const load = useCallback(async () => {
-    const [jobResult, applicationResult] = await Promise.all([
+    const [jobResult, applicationResult, profileResult, resumeResult] = await Promise.all([
       apiRequest("/jobs", { token: session.token }),
       apiRequest("/applications", { token: session.token }),
+      apiRequest("/profile/me", { token: session.token }),
+      apiRequest("/resumes", { token: session.token }),
     ]);
     setJobs(jobResult.jobs || []);
     setAppliedJobIds((applicationResult.applications || []).map((item) => String(item.job)));
+    setReadiness(getApplicationReadiness(profileResult.user.profile, resumeResult.resumes || []));
   }, [session.token]);
 
   useEffect(() => {
@@ -36,6 +41,10 @@ export function useCandidateJobs() {
   }, [handleError, load]);
 
   async function applyForJob(jobId) {
+    if (!readiness.ready) {
+      toast.error(readiness.message);
+      return;
+    }
     setBusyJobId(String(jobId));
     try {
       const result = await apiRequest("/applications", {
@@ -64,5 +73,5 @@ export function useCandidateJobs() {
     ].join(" ").toLowerCase().includes(search));
   }, [jobs, query]);
 
-  return { query, setQuery, jobs: filteredJobs, loading, busyJobId, appliedJobIds, applyForJob };
+  return { query, setQuery, jobs: filteredJobs, loading, busyJobId, appliedJobIds, applyForJob, readiness };
 }

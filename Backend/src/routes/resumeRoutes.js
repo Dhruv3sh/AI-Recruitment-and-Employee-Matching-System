@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Router } from "express";
 import mammoth from "mammoth";
@@ -82,6 +82,52 @@ function safeDownloadName(fileName) {
   return String(fileName).replace(/[\r\n"]/g, "_");
 }
 
+async function preserveApplicationSnapshots(resume) {
+  const applications = await Application.find({ resume: resume._id })
+    .select("+resumeSnapshot.storedFileName");
+  const pendingSnapshots = applications.filter(
+    (application) => !application.resumeSnapshot?.storedFileName,
+  );
+  if (!pendingSnapshots.length || !resume.storedFileName) return;
+
+  await Promise.all(pendingSnapshots.map(async (application) => {
+    const extension = path.extname(resume.storedFileName) || path.extname(resume.fileName);
+    const storedFileName = `application-${randomUUID()}${extension}`;
+    await copyFile(
+      path.join(uploadsDirectory, resume.storedFileName),
+      path.join(uploadsDirectory, storedFileName),
+    );
+    application.resumeSnapshot = {
+      fileName: application.resumeSnapshot?.fileName || resume.fileName,
+      mimeType: resume.mimeType,
+      storedFileName,
+      parsingStatus: application.resumeSnapshot?.parsingStatus || resume.parsingStatus,
+      parsed: application.resumeSnapshot?.parsed || resume.parsed,
+    };
+    await application.save();
+  }));
+}
+
+async function removePreviousCandidateResumes(candidateId) {
+  const previousResumes = await Resume.find({ candidate: candidateId })
+    .select("+storedFileName");
+
+  for (const resume of previousResumes) {
+    await preserveApplicationSnapshots(resume);
+  }
+
+  for (const resume of previousResumes) {
+    if (resume.storedFileName) {
+      await unlink(path.join(uploadsDirectory, resume.storedFileName)).catch((error) => {
+        if (error.code !== "ENOENT") throw error;
+      });
+    }
+    await resume.deleteOne();
+  }
+
+  return previousResumes.length;
+}
+
 async function processResume({ resumeId, candidateId, extractedText }) {
   try {
     const parsed = await parseResume(extractedText);
@@ -138,6 +184,14 @@ resumeRoutes.post(
       await mkdir(uploadsDirectory, { recursive: true });
       await writeFile(path.join(uploadsDirectory, storedFileName), req.file.buffer);
 
+      let replacedResumeCount = 0;
+      try {
+        replacedResumeCount = await removePreviousCandidateResumes(req.auth.sub);
+      } catch (error) {
+        await unlink(path.join(uploadsDirectory, storedFileName)).catch(() => {});
+        throw error;
+      }
+
       const resume = await Resume.create({
         candidate: req.auth.sub,
         fileName: req.file.originalname,
@@ -149,7 +203,9 @@ resumeRoutes.post(
 
       res.status(202).json({
         resume: publicResume(resume),
-        message: "Resume uploaded. Parsing and matching continue in the background.",
+        message: replacedResumeCount
+          ? "Resume updated. Parsing and matching continue in the background."
+          : "Resume uploaded. Parsing and matching continue in the background.",
       });
 
       void processResume({
@@ -169,9 +225,9 @@ resumeRoutes.get(
   requireRole("candidate"),
   async (req, res, next) => {
     try {
-      const resumes = await Resume.find({ candidate: req.auth.sub })
+      const resume = await Resume.findOne({ candidate: req.auth.sub })
         .sort({ createdAt: -1 });
-      res.json({ resumes: resumes.map(publicResume) });
+      res.json({ resumes: resume ? [publicResume(resume)] : [] });
     } catch (error) {
       next(error);
     }
@@ -191,6 +247,7 @@ resumeRoutes.delete(
       if (!resume) return res.status(404).json({ message: "Resume not found." });
 
       if (resume.storedFileName) {
+        await preserveApplicationSnapshots(resume);
         await unlink(path.join(uploadsDirectory, resume.storedFileName)).catch((error) => {
           if (error.code !== "ENOENT") throw error;
         });

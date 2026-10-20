@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, Building2, MapPin } from "lucide-react";
 import { labelSkill } from "../../utils/format";
 
-export function JobCard({ job, applied, busy, onApply }) {
+export function JobCard({ job, applied, busy, onApply, readiness }) {
   const skills = job.requirements?.skills || [];
   return (
     <article className="rounded-[10px] border border-[#d6e2ef] bg-white p-5 shadow-[0_5px_18px_rgba(25,72,132,0.04)]">
@@ -25,10 +25,11 @@ export function JobCard({ job, applied, busy, onApply }) {
           <button
             type="button"
             className="primary-button"
-            disabled={busy || applied}
+            title={!readiness?.ready ? readiness?.message : undefined}
+            disabled={busy || applied || !readiness?.ready}
             onClick={() => onApply(job._id)}
           >
-            {applied ? "Applied" : busy ? "Applying..." : "Apply"}
+            {applied ? "Applied" : busy ? "Applying..." : readiness?.ready ? "Apply" : "Profile & resume required"}
           </button>
         </div>
       </div>

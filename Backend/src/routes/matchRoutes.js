@@ -13,9 +13,9 @@ matchRoutes.get(
   async (req, res, next) => {
     try {
       const matches = await MatchResult.find({ candidate: req.auth.sub })
-        .populate("job")
+        .populate({ path: "job", match: { status: "open" } })
         .sort({ score: -1 });
-      res.json({ matches });
+      res.json({ matches: matches.filter((match) => match.job) });
     } catch (error) {
       next(error);
     }

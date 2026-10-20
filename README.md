@@ -23,7 +23,7 @@ Recruitment System/
 |  |- src/routes/        HTTP endpoint handlers
 |  |- src/services/      parsing, matching, embeddings, and AI services
 |  |- src/models/        Mongoose models
-|  `- src/validators/    Zod schemas
+|  `- src/controllers/   authentication and profile handlers
 ```
 
 `node_modules` belongs inside `Frontend/` and `Backend/`, because these are separate Node.js applications with their own dependencies and scripts. It should not be committed to Git.
@@ -32,7 +32,7 @@ Recruitment System/
 
 - Node.js 20 or later
 - MongoDB running locally or a MongoDB connection URI
-- Ollama, when AI-powered resume parsing is required
+- Ollama, for AI-assisted resume parsing, job-description drafts, and candidate job coaching (template/rule fallbacks are available)
 
 Install the configured Ollama model:
 
@@ -48,17 +48,7 @@ Create the API environment file from the example:
 Copy-Item Backend/.env.example Backend/.env
 ```
 
-Set at least the following values in `Backend/.env`:
-
-```env
-MONGODB_URI=*************
-JWT_SECRET=use-a-long-random-secret
-API_PORT=400*
-WEB_ORIGIN=http://localhost:3000
-OLLAMA_URL=http://127.0.0.1:****
-OLLAMA_MODEL=qwen3:8b
-EMBED_MODEL=Xenova/all-MiniLM-L6-v2
-```
+Configure MongoDB and a strong `JWT_SECRET` in `Backend/.env`. Ollama settings are optional and have defaults. Application acceptance/rejection emails require valid SMTP settings; see `Backend/.env.example` for the supported variables.
 
 The frontend defaults to `http://localhost:4002/api`. To override it, create `Frontend/.env.local`:
 
@@ -96,9 +86,13 @@ Open the local URL printed by Next.js, normally `http://localhost:3000`. If that
 
 ## Available Routes
 
-- `/` - authentication entry point
+- `/` - redirects to the authentication entry point
+- `/auth` - registration, login, and demo access
 - `/candidate` - candidate desk for profile, resume, and job recommendations
+- `/jobs` and `/jobs/[jobId]` - browse open roles, review match guidance, and apply
 - `/recruiter` - recruiter desk for jobs, candidate matches, and explanations
+- `/roles` - manage, edit, and close recruiter roles; draft job descriptions
+- `/applications` - track candidate applications or review recruiter submissions
 - `/system` - system map and Phase 1 scope
 
 The workspace routes share a root layout that owns navigation and session handling. Individual pages only render their route-specific content.
@@ -107,14 +101,18 @@ The workspace routes share a root layout that owns navigation and session handli
 
 - JWT authentication for candidate and recruiter accounts
 - Axios API client with automatic bearer-token handling and unauthorized-session recovery
-- Candidate profile and resume upload workflow
+- Candidate profile and single-current-resume upload workflow
 - PDF, DOCX, TXT, and Markdown resume uploads with text extraction and local original-file storage
 - Background resume parsing and match refreshes, so upload, registration, profile, and job responses remain responsive
 - Zod-validated structured resume data from Ollama, with deterministic parsing fallback
-- Recruiter job creation and normalized job requirements
+- Application readiness checks requiring a complete profile and processed resume
+- Recruiter job creation, editing, closing, and optional AI/template description drafts
 - Rule-based and MiniLM semantic candidate-job matching
 - Match explanations, missing-skill details, job recommendations, and candidate recommendations
-- MongoDB persistence for users, resumes, jobs, and match results
+- Candidate applications with profile and immutable resume snapshots, withdrawal, and status tracking
+- Recruiter application ranking, accept/reject decisions, and decision email notifications (SMTP configuration required)
+- Resume file viewing for owners and recruiters reviewing submitted application snapshots
+- MongoDB persistence for users, resumes, jobs, match results, and applications
 
 ## Testing
 
@@ -134,7 +132,10 @@ npm run build
 
 ## Documentation
 
+- [API reference: endpoints, payloads, responses, and flows](API.md)
 - [System data flow](data_flow.md)
 - [Requirements](srs.md)
 - [Business rules](rules.md)
 - [Backend flow reference](Backend/dataflow.md)
+
+The SRS describes the broader planned product. The running Phase 1 scope is summarized above; see the implementation-status sections in [srs.md](srs.md) and [rules.md](rules.md) for the boundary between current behavior and future requirements.

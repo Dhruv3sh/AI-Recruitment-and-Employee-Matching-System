@@ -160,6 +160,13 @@ async function inBatches(items, size, action) {
 
 export async function refreshCandidateMatches(candidate) {
   const jobs = await Job.find({ status: "open" }).select("+embedding.vector");
+  if ((process.env.MATCH_MODE || "hybrid") === "hybrid") {
+    try {
+      await ensureEmbedding(candidate, candidateText(candidate));
+    } catch (error) {
+      console.warn("Candidate embedding unavailable:", error.message);
+    }
+  }
   await inBatches(jobs, 5, (job) => storeMatch(candidate, job));
 }
 
@@ -169,5 +176,12 @@ export async function refreshJobMatches(job) {
     User.find({ role: "candidate" }).select("+embedding.vector"),
   ]);
   if (!storedJob) return;
+  if ((process.env.MATCH_MODE || "hybrid") === "hybrid") {
+    try {
+      await ensureEmbedding(storedJob, jobText(storedJob));
+    } catch (error) {
+      console.warn("Job embedding unavailable:", error.message);
+    }
+  }
   await inBatches(candidates, 5, (candidate) => storeMatch(candidate, storedJob));
 }

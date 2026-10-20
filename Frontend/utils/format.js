@@ -24,5 +24,6 @@ export const emptyJob = {
   location: "",
   experience: 0,
   skills: "",
+  education: "",
   description: "",
 };

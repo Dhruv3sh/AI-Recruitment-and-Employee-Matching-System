@@ -10,7 +10,6 @@ import {
   GraduationCap,
   MapPin,
   Save,
-  Trash2,
   UploadCloud,
 } from "lucide-react";
 import { RouteLoading } from "../../../components/ui/RouteLoading";
@@ -19,7 +18,6 @@ import { EmptyState } from "../../../components/ui/EmptyState";
 import { Field } from "../../../components/ui/Field";
 import { PanelHeading } from "../../../components/ui/PanelHeading";
 import { Score } from "../../../components/ui/Score";
-import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { labelSkill } from "../../../utils/format";
 
 export default function CandidatePage() {
@@ -124,8 +122,8 @@ export default function CandidatePage() {
               </span>
               <strong className="text-sm">Upload your resume</strong>
               <small className="max-w-xs text-[11px] leading-relaxed text-slate-500">
-                PDF, DOCX, TXT, and Markdown files are extracted and processed
-                in the background after upload.
+                PDF, DOCX, TXT, and Markdown files are extracted in the
+                background. Uploading a new file replaces your current resume.
               </small>
               <span className="secondary-button">
                 <FileText size={16} /> Choose file
@@ -142,7 +140,7 @@ export default function CandidatePage() {
             </label>
             <div className="mt-5 border-t border-line pt-4">
               <div className="mb-3 flex items-center justify-between gap-3">
-                <strong className="text-sm text-ink">Uploaded resumes</strong>
+                <strong className="text-sm text-ink">Current resume</strong>
                 <span className="text-xs text-slate-500">
                   {workspace.resumes.length}
                 </span>
@@ -179,14 +177,6 @@ export default function CandidatePage() {
                       >
                         <Eye size={15} /> View
                       </button>
-                      <button
-                        type="button"
-                        className="danger-button"
-                        disabled={workspace.busy}
-                        onClick={() => workspace.requestResumeRemoval(resume)}
-                      >
-                        <Trash2 size={15} /> Remove
-                      </button>
                     </li>
                   ))}
                 </ul>
@@ -219,6 +209,8 @@ export default function CandidatePage() {
                     String(match.job._id),
                   )}
                   onApply={workspace.applyForJob}
+                  applicationReady={workspace.applicationReady}
+                  applicationReadinessMessage={workspace.applicationReadinessMessage}
                 />
               ))
             ) : (
@@ -227,19 +219,11 @@ export default function CandidatePage() {
           </div>
         </section>
       </section>
-      <ConfirmDialog
-        open={Boolean(workspace.resumePendingRemoval)}
-        title="Remove this resume?"
-        description={`${workspace.resumePendingRemoval?.fileName || "This resume"} will be deleted permanently.`}
-        confirmLabel="Remove resume"
-        onCancel={workspace.cancelResumeRemoval}
-        onConfirm={workspace.confirmResumeRemoval}
-      />
     </>
   );
 }
 
-function JobRecommendation({ match, busy, applied, onApply }) {
+function JobRecommendation({ match, busy, applied, onApply, applicationReady, applicationReadinessMessage }) {
   const job = match.job;
   return (
     <article className="grid gap-4 rounded-[9px] border border-[#d6e2ef] bg-white p-5 sm:grid-cols-[minmax(0,1fr)_72px_minmax(180px,1fr)_auto] sm:items-center">
@@ -268,10 +252,11 @@ function JobRecommendation({ match, busy, applied, onApply }) {
         <button
           type="button"
           className="primary-button"
-          disabled={busy || applied}
+          title={!applicationReady ? applicationReadinessMessage : undefined}
+          disabled={busy || applied || !applicationReady}
           onClick={() => onApply(match.job._id)}
         >
-          {applied ? "Applied" : "Apply"}
+          {applied ? "Applied" : applicationReady ? "Apply" : "Profile & resume required"}
         </button>
       </div>
     </article>

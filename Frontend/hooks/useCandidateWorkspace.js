@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { apiRequest, isUnauthorizedError, openResumeFile } from "../lib/api";
 import { useWorkspaceSession } from "../components/layout/WorkspaceContext";
 import { emptyProfile } from "../utils/format";
+import { getApplicationReadiness } from "../utils/applicationReadiness";
 
 export function useCandidateWorkspace() {
   const { session, save, endSession } = useWorkspaceSession();
@@ -12,7 +13,6 @@ export function useCandidateWorkspace() {
   const [recommendations, setRecommendations] = useState([]);
   const [resumes, setResumes] = useState([]);
   const [appliedJobIds, setAppliedJobIds] = useState([]);
-  const [resumePendingRemoval, setResumePendingRemoval] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -71,7 +71,7 @@ export function useCandidateWorkspace() {
       const formData = new FormData();
       formData.append("resume", file);
       const result = await apiRequest("/resumes", { token: session.token, method: "POST", body: formData });
-      setResumes((current) => [result.resume, ...current]);
+      setResumes([result.resume]);
       toast.success(result.message);
       refreshAfterBackgroundWork(session);
     } catch (error) { handleRequestError(error); }
@@ -86,35 +86,12 @@ export function useCandidateWorkspace() {
     }
   }
 
-  async function deleteResume(resume) {
-    setBusy(true);
-    try {
-      await apiRequest(`/resumes/${resume.id}`, { token: session.token, method: "DELETE" });
-      setResumes((current) => current.filter((item) => item.id !== resume.id));
-      toast.success("Resume removed.");
-    } catch (error) {
-      handleRequestError(error);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function requestResumeRemoval(resume) {
-    setResumePendingRemoval(resume);
-  }
-
-  function cancelResumeRemoval() {
-    setResumePendingRemoval(null);
-  }
-
-  async function confirmResumeRemoval() {
-    if (!resumePendingRemoval) return;
-    const resume = resumePendingRemoval;
-    setResumePendingRemoval(null);
-    await deleteResume(resume);
-  }
-
   async function applyForJob(jobId) {
+    const readiness = getApplicationReadiness(profile, resumes);
+    if (!readiness.ready) {
+      toast.error(readiness.message);
+      return;
+    }
     setBusy(true);
     try {
       const result = await apiRequest("/applications", {
@@ -137,16 +114,14 @@ export function useCandidateWorkspace() {
     setProfile,
     recommendations,
     resumes,
+    applicationReady: getApplicationReadiness(profile, resumes).ready,
+    applicationReadinessMessage: getApplicationReadiness(profile, resumes).message,
     appliedJobIds,
-    resumePendingRemoval,
     loading,
     busy,
     saveProfile,
     uploadResume,
     viewResume,
-    requestResumeRemoval,
-    cancelResumeRemoval,
-    confirmResumeRemoval,
     applyForJob,
   };
 }

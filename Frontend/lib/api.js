@@ -30,11 +30,11 @@ export async function apiRequest(path, { token, method = "GET", body } = {}) {
   });
 }
 
-export async function openResumeFile(resumeId, token) {
+async function openAuthenticatedFile(path, token) {
   const preview = window.open("", "_blank");
   try {
     const file = await api({
-      url: `/resumes/${resumeId}/file`,
+      url: path,
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
       responseType: "blob",
@@ -50,6 +50,14 @@ export async function openResumeFile(resumeId, token) {
     preview?.close();
     throw error;
   }
+}
+
+export function openResumeFile(resumeId, token) {
+  return openAuthenticatedFile(`/resumes/${resumeId}/file`, token);
+}
+
+export function openApplicationResumeFile(applicationId, token) {
+  return openAuthenticatedFile(`/applications/${applicationId}/resume`, token);
 }
 
 export function isUnauthorizedError(error) {
