@@ -182,7 +182,7 @@ export default function JobDetailsPage() {
           </div>
           <aside className="rounded-[10px] border border-[#dce7f3] bg-[#f8fbff] p-5">
             <div className="flex items-center gap-2 text-sm font-extrabold">
-              <Lightbulb size={19} className="text-brand"/>  Required skills
+              <Lightbulb size={19} className="text-brand" /> Required skills
             </div>
             <div className="mt-4 flex flex-wrap gap-1.5">
               {(job.requirements?.skills || []).map((skill) => (
@@ -194,7 +194,7 @@ export default function JobDetailsPage() {
           </aside>
         </div>
       </article>
-      
+
       <section className="panel mt-6 overflow-hidden">
         <div className="border-b border-violet-100 bg-[#f7f3ff] px-6 py-5 sm:px-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -223,9 +223,15 @@ export default function JobDetailsPage() {
             </p>
           ) : coach ? (
             <>
-              <p className="max-w-3xl flex items-center gap-2 text-sm leading-6 ">
-                <WandSparkles size={17} className="text-brand"/> {coach.coach.summary}
+              <div className="rounded-[9px] border border-violet-100 bg-white px-4 py-3 text-xs leading-relaxed text-[#625d84]">
+                <strong className="text-[#34225f]">Why it surfaced:</strong>{" "}
+                {coach.explanation}
+              </div>
+              <p className="mt-4 max-w-3xl flex items-center gap-2 text-sm leading-6 ">
+                <WandSparkles size={17} className="text-brand" />{" "}
+                {coach.coach.summary}
               </p>
+
               {coach.coach.suggestions.length ? (
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   {coach.coach.suggestions.map((suggestion) => (
@@ -244,7 +250,7 @@ export default function JobDetailsPage() {
                 </div>
               ) : (
                 <p className="mt-4 flex items-center gap-2 text-sm text-[#7b759b]">
-                   All Skills Are Matched.
+                  All Skills Are Matched.
                 </p>
               )}
               <p className="mt-5 text-[11px] leading-relaxed text-[#7b759b]">

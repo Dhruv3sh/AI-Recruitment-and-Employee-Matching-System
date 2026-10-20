@@ -57,7 +57,12 @@ matchRoutes.get(
 
       const missingSkills = match?.missingSkills || job.requirements?.skills || [];
       const coach = await createJobCoach({ job, candidate, missingSkills });
-      res.json({ coach, score: match?.score ?? null, matchedSkills: match?.matchedSkills || [] });
+      res.json({
+        coach,
+        score: match?.score ?? null,
+        matchedSkills: match?.matchedSkills || [],
+        explanation: match?.explanation || "This open role is available for you to review.",
+      });
     } catch (error) {
       next(error);
     }

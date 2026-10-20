@@ -22,11 +22,11 @@ const navigation = {
   candidate: [
     { href: "/candidate", Icon: UserRound, label: "Candidate desk" },
     { href: "/jobs", Icon: Briefcase, label: "Jobs" },
-    { href: "/recommendations", Icon: Map, label: "System map" },
+    { href: "/system", Icon: Map, label: "System map" },
   ],
   recruiter: [
     { href: "/recruiter", Icon: BriefcaseBusiness, label: "Recruiter desk" },
-    { href: "/recommendations", Icon: Map, label: "System map" },
+    { href: "/system", Icon: Map, label: "System map" },
   ],
 };
 

@@ -21,7 +21,6 @@ export default function RecruiterPage() {
           <PanelHeading
             eyebrow="Job management"
             title="Publish a role"
-            tag="D3"
           />
           <form
             className="mt-6 grid gap-4 sm:grid-cols-2"
