@@ -1,0 +1,11 @@
+node_modules/
+.next/
+coverage/
+uploads/
+.env
+.env.local
+srs.md
+rules.md
+data_flow.md
+API.md
+dataflow.md

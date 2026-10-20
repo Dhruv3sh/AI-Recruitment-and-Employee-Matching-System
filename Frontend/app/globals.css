@@ -1,0 +1,72 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
+
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #10264d;
+  --color-paper: #f5f9ff;
+  --color-line: #dce7f3;
+  --color-brand: #1463f3;
+  --color-mint: #079d75;
+  --font-sans: "Manrope", Arial, sans-serif;
+  --font-mono: "DM Mono", monospace;
+}
+
+@layer base {
+  * {
+    @apply box-border;
+  }
+  body {
+    @apply min-w-[320px] bg-paper font-sans text-ink antialiased;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  button {
+    @apply cursor-pointer;
+  }
+  input,
+  select,
+  textarea {
+    @apply w-full rounded-[10px] border border-[#cad9eb] bg-white px-3 py-2.5 text-sm font-medium text-ink outline-none transition placeholder:text-slate-400 focus:border-brand focus:ring-4 focus:ring-blue-100;
+  }
+  textarea {
+    @apply resize-y;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-white bg-white shadow-[0_12px_30px_rgba(25,72,132,0.08)];
+  }
+  .eyebrow {
+    @apply font-mono text-[11px] font-medium uppercase tracking-normal text-[#56739a];
+  }
+  .primary-button {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-[9px] border border-brand bg-brand px-4 py-2 text-xs font-extrabold text-white shadow-[0_7px_16px_rgba(20,99,243,0.2)] transition hover:bg-[#0754db] disabled:cursor-not-allowed disabled:opacity-65;
+  }
+  .secondary-button {
+    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-[9px] border border-[#cad9eb] bg-white px-3 py-2 text-xs font-extrabold text-[#27446e] transition hover:border-blue-300 hover:bg-blue-50;
+  }
+  .form-label {
+    @apply grid gap-1.5 text-xs font-bold text-[#1a3158];
+  }
+  .field-hint {
+    @apply text-[10px] font-normal text-[#6680a4];
+  }
+  .danger-button {
+    @apply inline-flex min-h-9 items-center justify-center gap-1.5 rounded-[9px] px-2 py-2 text-xs font-extrabold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50;
+  }
+  .field-input {
+    @apply flex items-center gap-2 rounded-[10px] border border-[#cad9eb] bg-white px-3 py-0 transition focus-within:border-brand focus-within:ring-4 focus-within:ring-blue-100;
+  }
+  .field-input input {
+    @apply min-w-0 border-0 bg-transparent px-0 shadow-none ring-0 focus:border-0 focus:ring-0;
+  }
+  .skill-chip {
+    @apply rounded-md bg-[#eff5fc] px-2 py-1 font-mono text-[10px] text-[#3f5f87];
+  }
+}
