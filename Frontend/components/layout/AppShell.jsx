@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
+  Briefcase,
   BriefcaseBusiness,
   ChevronDown,
   CircleDotDashed,
@@ -20,6 +21,7 @@ import { initials } from "../../utils/format";
 const navigation = {
   candidate: [
     { href: "/candidate", Icon: UserRound, label: "Candidate desk" },
+    { href: "/jobs", Icon: Briefcase, label: "Jobs" },
     { href: "/recommendations", Icon: Map, label: "System map" },
   ],
   recruiter: [

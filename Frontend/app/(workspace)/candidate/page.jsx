@@ -1,6 +1,7 @@
 "use client";
 
-import { BriefcaseBusiness, CalendarDays, Eye, FileText, GraduationCap, Info, MapPin, Save, Sparkles, Trash2, UploadCloud } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, BriefcaseBusiness, CalendarDays, Eye, FileText, GraduationCap, MapPin, Save, Trash2, UploadCloud } from "lucide-react";
 import { RouteLoading } from "../../../components/ui/RouteLoading";
 import { useCandidateWorkspace } from "../../../hooks/useCandidateWorkspace";
 import { EmptyState } from "../../../components/ui/EmptyState";
@@ -202,14 +203,10 @@ function JobRecommendation({ match, busy, applied, onApply }) {
         <strong className="mb-1 block text-ink">Why it surfaced</strong>
         {match.explanation}
       </p>
-      <button
-        type="button"
-        className="primary-button"
-        disabled={busy || applied}
-        onClick={() => onApply(match.job._id)}
-      >
-        {applied ? "Applied" : "Apply"}
-      </button>
+      <div className="flex gap-2 sm:flex-col">
+        <Link href={`/jobs/${job._id}`} className="secondary-button"><ArrowUpRight size={15} /> View</Link>
+        <button type="button" className="primary-button" disabled={busy || applied} onClick={() => onApply(match.job._id)}>{applied ? "Applied" : "Apply"}</button>
+      </div>
     </article>
   );
 }

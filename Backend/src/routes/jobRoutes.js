@@ -16,6 +16,17 @@ jobRoutes.get("/", requireAuth, async (req, res, next) => {
     next(error);
   }
 });
+jobRoutes.get("/:jobId", requireAuth, async (req, res, next) => {
+  try {
+    const filter = { _id: req.params.jobId, status: "open" };
+    if (req.auth.role === "recruiter") filter.recruiter = req.auth.sub;
+    const job = await Job.findOne(filter);
+    if (!job) return res.status(404).json({ message: "Open job not found." });
+    res.json({ job });
+  } catch (error) {
+    next(error);
+  }
+});
 jobRoutes.post(
   "/",
   requireAuth,

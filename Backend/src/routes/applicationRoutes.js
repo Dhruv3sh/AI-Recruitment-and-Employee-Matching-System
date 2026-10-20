@@ -99,6 +99,26 @@ applicationRoutes.get(
   },
 );
 
+applicationRoutes.delete(
+  "/jobs/:jobId",
+  requireAuth,
+  requireRole("candidate"),
+  async (req, res, next) => {
+    try {
+      const application = await Application.findOneAndDelete({
+        candidate: req.auth.sub,
+        job: req.params.jobId,
+      });
+      if (!application) {
+        return res.status(404).json({ message: "Application not found." });
+      }
+      res.json({ message: "Application withdrawn." });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 applicationRoutes.get(
   "/jobs/:jobId",
   requireAuth,

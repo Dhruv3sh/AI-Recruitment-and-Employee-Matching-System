@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-export function ConfirmDialog({ open, title, description, confirmLabel, onCancel, onConfirm }) {
+export function ConfirmDialog({ open, title, description, confirmLabel, cancelLabel = "Keep", onCancel, onConfirm }) {
   useEffect(() => {
     if (!open) return undefined;
     const onKeyDown = (event) => {
@@ -25,7 +25,7 @@ export function ConfirmDialog({ open, title, description, confirmLabel, onCancel
         <h2 id="confirm-dialog-title" className="text-base font-extrabold text-ink">{title}</h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">{description}</p>
         <div className="mt-6 flex justify-end gap-2">
-          <button type="button" className="secondary-button" onClick={onCancel}>Keep</button>
+          <button type="button" className="secondary-button" onClick={onCancel}>{cancelLabel}</button>
           <button type="button" className="rounded-md bg-rose-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-rose-700" onClick={onConfirm}>
             {confirmLabel}
           </button>
