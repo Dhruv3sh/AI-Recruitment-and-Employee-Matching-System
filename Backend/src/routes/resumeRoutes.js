@@ -14,7 +14,7 @@ import { parseResume } from "../services/resumeParser.js";
 
 export const resumeRoutes = Router();
 
-const allowedExtensions = new Set([".pdf", ".docx", ".txt", ".md"]);
+const allowedExtensions = new Set([".pdf", ".docx"]);
 const uploadsDirectory = path.resolve(process.cwd(), "uploads");
 
 const upload = multer({
@@ -23,7 +23,7 @@ const upload = multer({
   fileFilter: (_req, file, callback) => {
     const extension = path.extname(file.originalname).toLowerCase();
     if (allowedExtensions.has(extension)) return callback(null, true);
-    const error = new Error("Only PDF, DOCX, TXT, and Markdown resume files are allowed.");
+    const error = new Error("Only PDF and DOCX resume files are allowed.");
     error.status = 400;
     return callback(error);
   },

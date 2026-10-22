@@ -37,11 +37,6 @@ export default function CandidatePage() {
         <p className="-mt-6 mb-8 text-sm text-[#617da4]">
           Fill in your profile details to get better matching recommendations.
         </p>
-        {/* <div className="mb-5 flex items-center gap-3 rounded-[9px] border border-blue-200 bg-[#f0f7ff] px-4 py-3 text-xs text-[#45658d]">
-          <Info size={20} className="shrink-0 text-brand" />
-          <strong className="text-brand">Phase 1 workspace</strong><span className="hidden h-4 w-px bg-blue-200 sm:block" />
-          <span className="hidden sm:block">Recommendations are explainable signals for your review, not hiring decisions.</span>
-        </div> */}
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,.9fr)]">
           <section className="panel p-6 sm:p-7">
             <PanelHeading
@@ -122,8 +117,8 @@ export default function CandidatePage() {
               </span>
               <strong className="text-sm">Upload your resume</strong>
               <small className="max-w-xs text-[11px] leading-relaxed text-slate-500">
-                PDF, DOCX, TXT, and Markdown files are extracted in the
-                background. Uploading a new file replaces your current resume.
+                PDF and DOCX files are extracted in the
+                background.
               </small>
               <span className="secondary-button">
                 <FileText size={16} /> Choose file
